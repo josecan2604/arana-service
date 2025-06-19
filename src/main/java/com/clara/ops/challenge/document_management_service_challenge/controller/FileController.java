@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -54,8 +55,9 @@ public class FileController {
             return new ResponseEntity<>("File must be a non-empty PDF.", HttpStatus.BAD_REQUEST);
         }
 
-        FileEntity fileEntitySpec = service.upload(user, documentName, tags, file);
-        return new ResponseEntity<>(fileEntitySpec, HttpStatus.CREATED);
+        CompletableFuture<FileEntity> completableFuture = service.upload(user, documentName, tags, file);
+
+        return new ResponseEntity<>( completableFuture.get(), HttpStatus.CREATED);
         }
 
         @GetMapping
