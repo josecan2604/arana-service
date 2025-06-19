@@ -16,10 +16,10 @@ version: '3.8'
 ...
 services:
     minio:
-      ...
+  
       environment:
         MINIO_ROOT_USER: admin  # Set your user
-        MINIO_ROOT_PASSWORD: ****  # Set your password
+        MINIO_ROOT_PASSWORD:  # Set your password
       
 ...
 ```
