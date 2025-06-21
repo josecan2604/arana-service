@@ -14,7 +14,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("File Management API")
-                        .description("Service for uploading, searching, and downloading PDF documents")
+                        .description("Service for uploading, searching, and downloading PDF file")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("Arana Jose - Clara Team")

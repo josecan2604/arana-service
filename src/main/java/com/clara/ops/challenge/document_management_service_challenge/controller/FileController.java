@@ -1,6 +1,9 @@
 package com.clara.ops.challenge.document_management_service_challenge.controller;
 
+import com.clara.ops.challenge.document_management_service_challenge.dtos.FileDTO;
+import com.clara.ops.challenge.document_management_service_challenge.dtos.TagDTO;
 import com.clara.ops.challenge.document_management_service_challenge.entities.FileEntity;
+import com.clara.ops.challenge.document_management_service_challenge.entities.TagEntity;
 import com.clara.ops.challenge.document_management_service_challenge.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,7 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -26,52 +31,66 @@ public class FileController {
         private final FileService service;
 
         public FileController(FileService service) {
+
             this.service = service;
         }
 
     @Operation(summary = "Upload a PDF document")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "File Uploaded"),
+            @ApiResponse(responseCode = "200", description = "File Uploaded"),
             @ApiResponse(responseCode = "400", description = "Bad Request")
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-        public ResponseEntity<?> upload(@RequestParam String user,
-                                           @RequestParam String documentName,
+        public CompletableFuture<ResponseEntity<?>> upload(@RequestParam String user,
+                                           @RequestParam String fileName,
                                            @RequestParam List<String> tags,
                                            @RequestParam MultipartFile file) throws Exception {
         if (user == null || user.trim().isEmpty()) {
-            return new ResponseEntity<>("User must not be blank.", HttpStatus.BAD_REQUEST);
+            return  CompletableFuture
+                    .completedFuture(ResponseEntity
+                            .badRequest()
+                            .body("User must not be blank."));
         }
 
-        if (documentName == null || documentName.trim().isEmpty()) {
-            return new ResponseEntity<>("Document name must not be blank.", HttpStatus.BAD_REQUEST);
-        }
+        if (fileName == null || fileName.trim().isEmpty()) {
+            return  CompletableFuture
+                    .completedFuture(ResponseEntity
+                            .badRequest()
+                            .body("Filenane must not be blank."));        }
 
         if (tags == null || tags.isEmpty()) {
-            return new ResponseEntity<>("At least one tag is required.", HttpStatus.BAD_REQUEST);
-        }
+            return  CompletableFuture
+                    .completedFuture(ResponseEntity
+                            .badRequest()
+                            .body("At leas one tag is required "));        }
 
         if (file == null || file.isEmpty() || !"application/pdf".equalsIgnoreCase(file.getContentType())) {
-            return new ResponseEntity<>("File must be a non-empty PDF.", HttpStatus.BAD_REQUEST);
+            return  CompletableFuture
+                    .completedFuture(ResponseEntity
+                            .badRequest()
+                            .body("A not blank Pdf file is required ."));
         }
 
-        CompletableFuture<FileEntity> completableFuture = service.upload(user, documentName, tags, file);
+        return service.upload(user, fileName, tags, file)
+                .thenApply( l -> ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .body(l));
 
-        return new ResponseEntity<>( completableFuture.get(), HttpStatus.CREATED);
         }
 
         @GetMapping
         @Operation(summary = "Search documents by user, name, tags with pagination and filter")
-        public ResponseEntity<Page<FileEntity>> search(@RequestParam(required = false) String user,
-                                                       @RequestParam(required = false) String documentName,
+        public ResponseEntity<Page<FileDTO>> search(@RequestParam(required = false) String user,
+                                                       @RequestParam(required = false) String fileName,
                                                        @RequestParam(required = false) List<String> tags,
-                                                       @RequestParam(defaultValue = "1") int page,
+                                                       @RequestParam(defaultValue = "0") int page,
                                                        @RequestParam(defaultValue = "10") int size) {
 
             PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-            Page<FileEntity> results = service.search(user, documentName, tags,  pageable);
+            Page<FileEntity> results = service.searchDocuments(user, fileName, tags, pageable);
+            Page<FileDTO> dtoPage = results.map(this::mapToDto);
 
-            return new ResponseEntity<>(results, HttpStatus.CREATED);
+            return  ResponseEntity.ok(dtoPage);
         }
 
         @GetMapping("/{id}/download")
@@ -85,4 +104,21 @@ public class FileController {
                     .map(url -> ResponseEntity.ok(Map.of("url", url)))
                     .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
         }
+    private FileDTO mapToDto(FileEntity file) {
+        Set<TagDTO> tagDtos = file.getTags().stream()
+                .map(tag -> new TagDTO (tag.getId(), tag.getName()))
+                .collect(Collectors.toSet());
+
+        return new FileDTO(
+                file.getId(),
+                file.getUserName(),
+                file.getFileName(),
+                file.getFileType(),
+                file.getFileSize(),
+                file.getMinioPath(),
+                file.getCreatedAt(),
+                tagDtos
+        );
     }
+
+}

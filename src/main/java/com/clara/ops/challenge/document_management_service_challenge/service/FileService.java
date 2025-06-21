@@ -2,17 +2,20 @@ package com.clara.ops.challenge.document_management_service_challenge.service;
 
 import com.clara.ops.challenge.document_management_service_challenge.config.ExecutorConfig;
 import com.clara.ops.challenge.document_management_service_challenge.entities.FileEntity;
+import com.clara.ops.challenge.document_management_service_challenge.entities.TagEntity;
 import com.clara.ops.challenge.document_management_service_challenge.repository.FileRepository;
+import com.clara.ops.challenge.document_management_service_challenge.repository.FileSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 @Service
 public class FileService {
@@ -31,10 +34,14 @@ public class FileService {
             try {
                 String minioPath = minioService.upload(documentName, file, user);
 
+                Set<TagEntity> tagEntities = tags.stream()
+                        .map(tag -> new TagEntity(tag.trim().toLowerCase()))
+                        .collect(Collectors.toSet());
+
                 FileEntity doc = FileEntity.builder()
-                        .user(user)
+                        .userName(user)
                         .fileName(documentName)
-                        .tags(tags)
+                        .tags(tagEntities)
                         .fileSize(file.getSize())
                         .fileType(file.getContentType())
                         .minioPath(minioPath)
@@ -48,10 +55,11 @@ public class FileService {
         }, executorService);
     }
 
-    public Page<FileEntity> search(String user, String name, List<String> tags, Pageable pageable) {
-        return    repository.searchByFilters(user, name, tags == null || tags.isEmpty() ? null : tags, pageable);
-
+    public Page<FileEntity> searchDocuments(String userName, String fileName, List<String> tags, Pageable pageable) {
+        Specification<FileEntity> spec = FileSpecifications.withFilters(userName, fileName, tags);
+        return repository.findAll(spec, pageable);
     }
+
 
     public Optional<String> generateDownloadUrl(Long id) throws Exception {
         return repository.findById(id)
