@@ -29,11 +29,14 @@ public class FileService {
   }
 
   public CompletableFuture<FileEntity> upload(
-      String user, String documentName, List<String> tags, MultipartFile file) throws Exception {
+      String user, String fileName, List<String> tags, MultipartFile file) throws Exception {
     return CompletableFuture.supplyAsync(
         () -> {
           try {
-            String minioPath = minioService.upload(documentName, file, user);
+              if (repository.existsByUserNameAndFileName(user, fileName)) {
+                  throw new IllegalStateException("File with the same name already exists for this user.");
+              }
+            String minioPath = minioService.upload(fileName, file, user);
 
             List<TagEntity> tagEntities =
                 tags.stream()
@@ -43,7 +46,7 @@ public class FileService {
             FileEntity doc =
                 FileEntity.builder()
                     .userName(user)
-                    .fileName(documentName)
+                    .fileName(fileName)
                     .tags(tagEntities)
                     .fileSize(file.getSize())
                     .fileType(file.getContentType())

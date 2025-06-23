@@ -53,5 +53,14 @@ public class MinioService {
             .object(objectPath)
             .expiry(10, TimeUnit.MINUTES)
             .build());
+
+
+
+
+
+
+
+
+
   }
 }

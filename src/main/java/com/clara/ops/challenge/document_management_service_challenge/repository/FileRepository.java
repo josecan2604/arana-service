@@ -7,4 +7,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FileRepository
-    extends JpaRepository<FileEntity, Long>, JpaSpecificationExecutor<FileEntity> {}
+    extends JpaRepository<FileEntity, Long>, JpaSpecificationExecutor<FileEntity> {
+        boolean existsByUserNameAndFileName(String userName, String fileName);
+
+
+}
