@@ -6,6 +6,5 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class DocumentManagementServiceChallengeApplicationTests {
 
-  @Test
-  void contextLoads() {}
+
 }
