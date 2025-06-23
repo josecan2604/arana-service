@@ -6,7 +6,7 @@ The purpose of these file is to instruct on how to have the file-service up and 
 
 ---
 
-## Features
+## Features 
 
 - Upload PDF files (up to 500MB)
 - Store files in MinIO using path: `file-bucket/{user}/{file}`
