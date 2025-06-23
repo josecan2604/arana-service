@@ -31,7 +31,7 @@ services:
   # Include all the necessary settings to include a document management service in the stack
   # Remember to configure this service to limit the memory to 50MB
   file-management-service:
-    image: jarana26/file-service:latest
+    image: jarana26/file-service:latest #Public Repo
     container_name: file_service
     depends_on:
       - postgresql
