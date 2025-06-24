@@ -183,57 +183,58 @@ public class FileControllerTest {
     latch.await(); // Wait for all threads to finish
     executor.shutdown();
   }
+
   @Test
   void testUploadFile_InternalServerError() throws Exception {
     MockMultipartFile file =
-            new MockMultipartFile("file", "file.pdf", "application/pdf", "Fake content".getBytes());
+        new MockMultipartFile("file", "file.pdf", "application/pdf", "Fake content".getBytes());
 
     when(fileService.upload(anyString(), anyString(), anyList(), any()))
-            .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Something broke")));
+        .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Something broke")));
 
     MvcResult result =
-            mockMvc
-                    .perform(
-                            MockMvcRequestBuilders.multipart("/api/documents")
-                                    .file(file)
-                                    .param("user", "testuser")
-                                    .param("fileName", "file.pdf")
-                                    .param("tags", "tag1"))
-                    .andExpect(request().asyncStarted())
-                    .andReturn();
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.multipart("/api/documents")
+                    .file(file)
+                    .param("user", "testuser")
+                    .param("fileName", "file.pdf")
+                    .param("tags", "tag1"))
+            .andExpect(request().asyncStarted())
+            .andReturn();
 
     mockMvc
-            .perform(asyncDispatch(result))
-            .andExpect(status().isInternalServerError())
-            .andExpect(jsonPath("$.status").value(500));
+        .perform(asyncDispatch(result))
+        .andExpect(status().isInternalServerError())
+        .andExpect(jsonPath("$.status").value(500));
   }
 
   @Test
   void testUploadMissingUserParam() throws Exception {
     MockMultipartFile file =
-            new MockMultipartFile("file", "file.pdf", "application/pdf", "Fake".getBytes());
+        new MockMultipartFile("file", "file.pdf", "application/pdf", "Fake".getBytes());
 
     mockMvc
-            .perform(
-                    MockMvcRequestBuilders.multipart("/api/documents")
-                            .file(file)
-                            .param("fileName", "file.pdf")
-                            .param("tags", "tag1"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.status").value(400))
-            .andExpect(jsonPath("$.message").value("Required request parameter  user is not present"));
+        .perform(
+            MockMvcRequestBuilders.multipart("/api/documents")
+                .file(file)
+                .param("fileName", "file.pdf")
+                .param("tags", "tag1"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.message").value("Required request parameter  user is not present"));
   }
+
   @Test
   void testUploadMissingFilePart() throws Exception {
     mockMvc
-            .perform(
-                    MockMvcRequestBuilders.multipart("/api/documents")
-                            .param("user", "testuser")
-                            .param("fileName", "file.pdf")
-                            .param("tags", "tag1"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.status").value(400))
-            .andExpect(jsonPath("$.message").value("Required request parameter  file is not present"));
+        .perform(
+            MockMvcRequestBuilders.multipart("/api/documents")
+                .param("user", "testuser")
+                .param("fileName", "file.pdf")
+                .param("tags", "tag1"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.message").value("Required request parameter  file is not present"));
   }
-
 }

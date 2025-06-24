@@ -92,8 +92,7 @@ public class FileController {
               int status = (ex.getCause() instanceof IllegalStateException) ? 400 : 500;
               String message = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
 
-              ApiResponseWrapper<FileDTO> wrapper =
-                  new ApiResponseWrapper<>(null, message, status);
+              ApiResponseWrapper<FileDTO> wrapper = new ApiResponseWrapper<>(null, message, status);
               return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(wrapper);
             });
   }

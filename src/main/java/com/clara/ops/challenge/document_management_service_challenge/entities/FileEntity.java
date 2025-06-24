@@ -13,11 +13,13 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "file_entity", indexes = {
-        @Index(name = "idx_file_user_name", columnList = "user_name"),
-        @Index(name = "idx_file_file_name", columnList = "file_name"),
-        @Index(name = "idx_file_created_at", columnList = "created_at")
-})
+@Table(
+    name = "file_entity",
+    indexes = {
+      @Index(name = "idx_file_user_name", columnList = "user_name"),
+      @Index(name = "idx_file_file_name", columnList = "file_name"),
+      @Index(name = "idx_file_created_at", columnList = "created_at")
+    })
 public class FileEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
