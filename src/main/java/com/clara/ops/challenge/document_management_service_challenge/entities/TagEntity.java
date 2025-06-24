@@ -13,15 +13,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
-@Table(name = "tags", indexes = {
-        @Index(name = "idx_tags_name", columnList = "name")
-})
+@Table(
+    name = "tags",
+    indexes = {@Index(name = "idx_tags_name", columnList = "name")})
 public class TagEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-
   private Long id;
 
   @Column(nullable = false)
